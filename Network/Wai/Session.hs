@@ -1,4 +1,4 @@
-module Network.Wai.Session (Session, withSession) where
+module Network.Wai.Session (Session, SessionStore, withSession) where
 
 import Data.String (fromString)
 import Control.Monad.Trans.Class (lift)
@@ -11,14 +11,24 @@ import qualified Data.Vault as Vault
 import Data.ByteString (ByteString)
 import qualified Blaze.ByteString.Builder as Builder
 
+-- | Type representing a single session (a lookup, insert pair)
 type Session m k v = ((k -> m (Maybe v)), (k -> v -> m ()))
 
+-- | A 'SessionStore' takes in the contents of the cookie (if there was one)
+-- and returns a ('Session', new contents for cookie) pair
+type SessionStore m k v = (Maybe ByteString -> IO (Session m k v, ByteString))
+
+-- | Fully parameterised middleware for cookie-based sessions
 withSession ::
-	(Maybe ByteString -> IO (Session m k v, ByteString)) ->
-	ByteString ->
-	SetCookie ->
-	Key (Session m k v) ->
-	Middleware
+	SessionStore m k v
+	-- ^ The 'SessionStore' to use for sessions
+	-> ByteString
+	-- ^ Name to use for the session cookie (MUST BE ASCII)
+	-> SetCookie
+	-- ^ Settings for the cookie (path, expiry, etc)
+	-> Key (Session m k v)
+	-- ^ 'Data.Vault.Vault' key to use when passing the session through
+	-> Middleware
 withSession sessions cookieName cookieDefaults vkey app req = do
 	(session, newCookieVal) <- lift $ sessions $ lookup cookieName =<< cookies
 	resp <- app (req {vault = Vault.insert vkey session (vault req)})

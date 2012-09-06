@@ -1,0 +1,10 @@
+Provides a generic, cookie-based middleware for sessions that is
+parameterised over the session store, the cookie name, and the
+cookie parameters (such as path, expiry, etc).  Passes a pair of
+functions (lookup key, set key) for the current session through the
+'Vault' in the 'Request'.
+
+Also provides a simple example session store based on threadsafe
+'IORef's and 'Data.Map'.
+
+See example/Main.hs in git for example usage.

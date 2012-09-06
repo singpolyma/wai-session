@@ -9,15 +9,18 @@ import Data.IORef
 import Data.Unique
 import Data.Ratio
 import Data.Time.Clock.POSIX
-import Network.Wai.Session (Session)
+import Network.Wai.Session (Session, SessionStore)
 
 import Data.Map (Map)
 import qualified Data.Map as Map
 
+-- | Simple session store based on threadsafe 'Data.IORef.IORef's and 'Data.Map.Map'
+--
+-- WARNING: This session is vunerable to sidejacking, use with TLS for security.
 mapStore :: (Ord k, MonadIO m) =>
-	IO ByteString ->
-	Maybe ByteString ->
-	IO (Session m k v, ByteString)
+	IO ByteString
+	-- ^ 'IO' action to generate unique session IDs
+	-> SessionStore m k v
 mapStore gen key =
 	newThreadSafeStateVar Map.empty >>= mapStore' gen key
 	where
@@ -33,9 +36,8 @@ mapStore gen key =
 		ssv $~ Map.insert newKey sv
 		return (sessionFromMapStateVar sv, newKey)
 
-mapStore_ :: (Ord k, MonadIO m) =>
-	Maybe ByteString ->
-	IO (Session m k v, ByteString)
+-- | Store using simple session ID generator based on time and 'Data.Unique'
+mapStore_ :: (Ord k, MonadIO m) => SessionStore m k v
 mapStore_ = mapStore (do
 		u <- fmap (toInteger . hashUnique) newUnique
 		time <- fmap toRational getPOSIXTime
