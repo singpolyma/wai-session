@@ -14,9 +14,13 @@ import Network.Wai.Session (Session, SessionStore)
 import Data.Map (Map)
 import qualified Data.Map as Map
 
--- | Simple session store based on threadsafe 'Data.IORef.IORef's and 'Data.Map.Map'
+-- | Simple session store based on threadsafe 'Data.IORef.IORef's and
+-- 'Data.Map.Map'.  This only works if your application server remains
+-- running (such as with warp).  All data is lost when the server
+-- terminates (bad for CGI).
 --
--- WARNING: This session is vunerable to sidejacking, use with TLS for security.
+-- WARNING: This session is vulnerable to sidejacking,
+-- use with TLS for security.
 mapStore :: (Ord k, MonadIO m) =>
 	IO ByteString
 	-- ^ 'IO' action to generate unique session IDs
