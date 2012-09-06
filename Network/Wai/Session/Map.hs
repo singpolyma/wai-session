@@ -20,24 +20,24 @@ import qualified Data.Map as Map
 mapStore :: (Ord k, MonadIO m) =>
 	IO ByteString
 	-- ^ 'IO' action to generate unique session IDs
-	-> SessionStore m k v
-mapStore gen key =
-	newThreadSafeStateVar Map.empty >>= mapStore' gen key
+	-> IO (SessionStore m k v)
+mapStore gen =
+	newThreadSafeStateVar Map.empty >>= return . mapStore' gen
 	where
-	mapStore' _ (Just k) ssv = do
+	mapStore' _ ssv (Just k) = do
 		m <- get ssv
 		case Map.lookup k m of
 			Just sv -> return (sessionFromMapStateVar sv, k)
 			-- Could not find key, so it's as if we were not sent one
-			Nothing -> mapStore' (return k) Nothing ssv
-	mapStore' genNewKey Nothing ssv = do
+			Nothing -> mapStore' (return k) ssv Nothing
+	mapStore' genNewKey ssv Nothing = do
 		newKey <- genNewKey
 		sv <- newThreadSafeStateVar Map.empty
 		ssv $~ Map.insert newKey sv
 		return (sessionFromMapStateVar sv, newKey)
 
 -- | Store using simple session ID generator based on time and 'Data.Unique'
-mapStore_ :: (Ord k, MonadIO m) => SessionStore m k v
+mapStore_ :: (Ord k, MonadIO m) => IO (SessionStore m k v)
 mapStore_ = mapStore (do
 		u <- fmap (toInteger . hashUnique) newUnique
 		time <- fmap toRational getPOSIXTime

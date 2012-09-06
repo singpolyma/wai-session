@@ -13,7 +13,8 @@ import Network.HTTP.Types (ok200)
 main :: IO ()
 main = do
 	vk <- Vault.newKey
-	run 3000 (withSession mapStore_ (fromString "SESSION") def vk (\req -> do
+	store <- mapStore_
+	run 3000 (withSession store (fromString "SESSION") def vk (\req -> do
 			let Just (sessionLookup, sessionInsert) = Vault.lookup vk (vault req)
 			u <- sessionLookup "u"
 			sessionInsert "u" (show $ pathInfo req)
