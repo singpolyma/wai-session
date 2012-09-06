@@ -26,7 +26,7 @@ mapStore :: (Ord k, MonadIO m) =>
 	-- ^ 'IO' action to generate unique session IDs
 	-> IO (SessionStore m k v)
 mapStore gen =
-	newThreadSafeStateVar Map.empty >>= return . mapStore' gen
+	liftM (mapStore' gen) (newThreadSafeStateVar Map.empty)
 	where
 	mapStore' _ ssv (Just k) = do
 		m <- get ssv
