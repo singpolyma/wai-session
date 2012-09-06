@@ -31,14 +31,14 @@ mapStore gen =
 	mapStore' _ ssv (Just k) = do
 		m <- get ssv
 		case Map.lookup k m of
-			Just sv -> return (sessionFromMapStateVar sv, k)
+			Just sv -> return (sessionFromMapStateVar sv, return k)
 			-- Could not find key, so it's as if we were not sent one
 			Nothing -> mapStore' (return k) ssv Nothing
 	mapStore' genNewKey ssv Nothing = do
 		newKey <- genNewKey
 		sv <- newThreadSafeStateVar Map.empty
 		ssv $~ Map.insert newKey sv
-		return (sessionFromMapStateVar sv, newKey)
+		return (sessionFromMapStateVar sv, return newKey)
 
 -- | Store using simple session ID generator based on time and 'Data.Unique'
 mapStore_ :: (Ord k, MonadIO m) => IO (SessionStore m k v)

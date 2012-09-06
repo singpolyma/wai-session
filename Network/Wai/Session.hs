@@ -15,8 +15,8 @@ import qualified Blaze.ByteString.Builder as Builder
 type Session m k v = ((k -> m (Maybe v)), (k -> v -> m ()))
 
 -- | A 'SessionStore' takes in the contents of the cookie (if there was one)
--- and returns a ('Session', new contents for cookie) pair
-type SessionStore m k v = (Maybe ByteString -> IO (Session m k v, ByteString))
+-- and returns a ('Session', 'IO' action to get new contents for cookie) pair
+type SessionStore m k v = (Maybe ByteString -> IO (Session m k v, IO ByteString))
 
 -- | Fully parameterised middleware for cookie-based sessions
 withSession ::
@@ -30,8 +30,9 @@ withSession ::
 	-- ^ 'Data.Vault.Vault' key to use when passing the session through
 	-> Middleware
 withSession sessions cookieName cookieDefaults vkey app req = do
-	(session, newCookieVal) <- lift $ sessions $ lookup cookieName =<< cookies
+	(session, getNewCookie) <- lift $ sessions $ lookup cookieName =<< cookies
 	resp <- app (req {vault = Vault.insert vkey session (vault req)})
+	newCookieVal <- lift getNewCookie
 	return $ mapHeader (\hs -> (setCookie, newCookie newCookieVal):hs) resp
 	where
 	newCookie v = Builder.toByteString $ renderSetCookie $ cookieDefaults {
