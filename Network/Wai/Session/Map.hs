@@ -2,14 +2,10 @@ module Network.Wai.Session.Map (mapStore, mapStore_) where
 
 import Control.Monad
 import Data.StateVar
-import Data.String (fromString)
 import Data.ByteString (ByteString)
 import Control.Monad.IO.Class (liftIO, MonadIO)
 import Data.IORef
-import Data.Unique
-import Data.Ratio
-import Data.Time.Clock.POSIX
-import Network.Wai.Session (Session, SessionStore)
+import Network.Wai.Session (Session, SessionStore, genSessionId)
 
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -42,11 +38,7 @@ mapStore gen =
 
 -- | Store using simple session ID generator based on time and 'Data.Unique'
 mapStore_ :: (Ord k, MonadIO m) => IO (SessionStore m k v)
-mapStore_ = mapStore (do
-		u <- fmap (toInteger . hashUnique) newUnique
-		time <- fmap toRational getPOSIXTime
-		return $ fromString $ show (numerator time * denominator time * u)
-	)
+mapStore_ = mapStore genSessionId
 
 newThreadSafeStateVar :: a -> IO (StateVar a)
 newThreadSafeStateVar a = do

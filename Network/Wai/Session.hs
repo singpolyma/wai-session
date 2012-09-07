@@ -1,5 +1,8 @@
-module Network.Wai.Session (Session, SessionStore, withSession) where
+module Network.Wai.Session (Session, SessionStore, withSession, genSessionId) where
 
+import Data.Unique (newUnique, hashUnique)
+import Data.Ratio (numerator, denominator)
+import Data.Time.Clock.POSIX (getPOSIXTime)
 import Data.String (fromString)
 import Control.Monad.Trans.Class (lift)
 import Network.HTTP.Types (ResponseHeaders)
@@ -41,6 +44,15 @@ withSession sessions cookieName cookieDefaults vkey app req = do
 	cookies = fmap parseCookies $ lookup ciCookie (requestHeaders req)
 	setCookie = fromString "Set-Cookie"
 	ciCookie = fromString "Cookie"
+
+-- | Session IO generator using simple based on time and 'Data.Unique'
+--
+-- Useful for session stores that use session IDs.
+genSessionId :: IO ByteString
+genSessionId = do
+	u <- fmap (toInteger . hashUnique) newUnique
+	time <- fmap toRational getPOSIXTime
+	return $ fromString $ show (numerator time * denominator time * u)
 
 mapHeader :: (ResponseHeaders -> ResponseHeaders) -> Response -> Response
 mapHeader f (ResponseFile s h b1 b2) = ResponseFile s (f h) b1 b2
