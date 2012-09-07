@@ -45,7 +45,7 @@ withSession sessions cookieName cookieDefaults vkey app req = do
 	setCookie = fromString "Set-Cookie"
 	ciCookie = fromString "Cookie"
 
--- | Session IO generator using simple based on time and 'Data.Unique'
+-- | Simple session ID generator based on time and 'Data.Unique'
 --
 -- Useful for session stores that use session IDs.
 genSessionId :: IO ByteString
