@@ -59,6 +59,6 @@ sessionFromMapStateVar :: (HasGetter sv, HasSetter sv, Ord k, MonadIO m) =>
 	sv (Map k v) ->
 	Session m k v
 sessionFromMapStateVar sv = (
-		(\k -> Map.lookup k `liftM` liftIO (get sv)),
+		(\k -> liftIO (Map.lookup k `liftM` get sv)),
 		(\k v -> liftIO (sv $~ Map.insert k v))
 	)
