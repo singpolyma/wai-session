@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Network.Wai.Session (Session, SessionStore, withSession, genSessionId) where
 
 import Data.Unique (newUnique, hashUnique)
@@ -9,8 +10,13 @@ import Network.HTTP.Types (ResponseHeaders)
 import Network.Wai (Middleware, Request(..), Response(..))
 import Web.Cookie (parseCookies, renderSetCookie, SetCookie(..))
 
+#if MIN_VERSION_vault(0,3,0)
+import Data.Vault.Lazy (Key)
+import qualified Data.Vault.Lazy as Vault
+#else
 import Data.Vault (Key)
 import qualified Data.Vault as Vault
+#endif
 import Data.ByteString (ByteString)
 import qualified Blaze.ByteString.Builder as Builder
 
