@@ -1,0 +1,5 @@
+language: haskell
+matrix:
+  include:
+    - install: cabal install --constraint="wai < 2.0.0" --only-dependencies --enable-tests
+script: cabal configure --enable-tests && cabal build
