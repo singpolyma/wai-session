@@ -1,5 +1,7 @@
 language: haskell
 matrix:
   include:
-    - install: cabal install --constraint="wai < 2.0.0" --only-dependencies --enable-tests
+    - install: cabal install --only-dependencies --enable-tests
+    - install: cabal install --max-backjumps=-1 --constraint="wai < 2.0.0" --only-dependencies --enable-tests
+    - install: cabal install --constraint="wai >= 2.0.0 && < 3.0.0" --only-dependencies --enable-tests
 script: cabal configure --enable-tests && cabal build
