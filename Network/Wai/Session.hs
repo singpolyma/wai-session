@@ -8,10 +8,10 @@ import Data.String (fromString)
 import Control.Monad.IO.Class (liftIO)
 import Network.HTTP.Types (ResponseHeaders)
 import Network.Wai (Middleware, Request(..))
-#if MIN_VERSION_wai(2,0,0)
-import Network.Wai.Internal (Response(ResponseBuilder,ResponseFile,ResponseSource))
+#if MIN_VERSION_wai(3,0,0)
+import Network.Wai.Internal (Response(ResponseBuilder,ResponseFile,ResponseStream,ResponseRaw))
 #else
-import Network.Wai (Response(ResponseBuilder,ResponseFile,ResponseSource))
+import Network.Wai.Internal (Response(ResponseBuilder,ResponseFile,ResponseSource))
 #endif
 import Web.Cookie (parseCookies, renderSetCookie, SetCookie(..))
 
@@ -43,11 +43,22 @@ withSession ::
 	-> Key (Session m k v)
 	-- ^ 'Data.Vault.Vault' key to use when passing the session through
 	-> Middleware
+#if MIN_VERSION_wai(3,0,0)
+withSession sessions cookieName cookieDefaults vkey app req respond = do
+#else
 withSession sessions cookieName cookieDefaults vkey app req = do
+#endif
 	(session, getNewCookie) <- liftIO $ sessions $ lookup cookieName =<< cookies
+#if MIN_VERSION_wai(3,0,0)
+	app (req {vault = Vault.insert vkey session (vault req)}) (\r -> do
+			newCookieVal <- liftIO getNewCookie
+			respond $ mapHeader (\hs -> (setCookie, newCookie newCookieVal):hs) r
+		)
+#else
 	resp <- app (req {vault = Vault.insert vkey session (vault req)})
 	newCookieVal <- liftIO getNewCookie
 	return $ mapHeader (\hs -> (setCookie, newCookie newCookieVal):hs) resp
+#endif
 	where
 	newCookie v = Builder.toByteString $ renderSetCookie $ cookieDefaults {
 			setCookieName = cookieName, setCookieValue = v
@@ -65,7 +76,13 @@ genSessionId = do
 	time <- fmap toRational getPOSIXTime
 	return $ fromString $ show (numerator time * denominator time * u)
 
+-- | Run a function over the headers in a 'Response'
 mapHeader :: (ResponseHeaders -> ResponseHeaders) -> Response -> Response
 mapHeader f (ResponseFile s h b1 b2) = ResponseFile s (f h) b1 b2
 mapHeader f (ResponseBuilder s h b) = ResponseBuilder s (f h) b
+#if MIN_VERSION_wai(3,0,0)
+mapHeader f (ResponseStream s h b) = ResponseStream s (f h) b
+mapHeader _ (ResponseRaw _ _) = error "Cannot mapHeader of Wai.Interal.ResponseRaw when trying to add session cookie header"
+#else
 mapHeader f (ResponseSource s h b) = ResponseSource s (f h) b
+#endif

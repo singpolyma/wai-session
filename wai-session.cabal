@@ -1,5 +1,5 @@
 name:            wai-session
-version:         0.2
+version:         0.3
 cabal-version:   >= 1.8
 license:         OtherLicense
 license-file:    COPYING
@@ -42,7 +42,7 @@ library
                 StateVar,
                 vault,
                 cookie,
-                wai >= 1.1.0,
+                wai >= 2.0.0,
                 http-types,
                 blaze-builder
 
