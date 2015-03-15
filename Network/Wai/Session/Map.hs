@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Network.Wai.Session.Map (mapStore, mapStore_) where
 
 import Control.Monad
@@ -47,8 +48,13 @@ newThreadSafeStateVar a = do
 		(atomicModifyIORef ref (\x -> (x,x)))
 		(\x -> atomicModifyIORef ref (const (x,())))
 
+#if MIN_VERSION_StateVar(1,1,0)
+sessionFromMapStateVar :: (Ord k, MonadIO m) =>
+	StateVar (Map k v) ->
+#else
 sessionFromMapStateVar :: (HasGetter sv, HasSetter sv, Ord k, MonadIO m) =>
 	sv (Map k v) ->
+#endif
 	Session m k v
 sessionFromMapStateVar sv = (
 		(\k -> liftIO (Map.lookup k `liftM` get sv)),
