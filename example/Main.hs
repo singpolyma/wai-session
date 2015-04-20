@@ -2,17 +2,16 @@ module Main where
 
 import Data.Default (def)
 import Data.String (fromString)
-import qualified Data.Vault as Vault
+import qualified Data.Vault.Lazy as Vault
 
 import Network.Wai
 import Network.Wai.Session (withSession, Session)
 import Network.Wai.Session.Map (mapStore_)
 import Network.Wai.Handler.Warp (run)
 import Network.HTTP.Types (ok200)
-import Control.Monad.Trans.Resource (ResourceT)
 
-app :: Vault.Key (Session (ResourceT IO) String String) -> Application
-app session env = do
+app :: Vault.Key (Session IO String String) -> Application
+app session env = (>>=) $ do
 	u <- sessionLookup "u"
 	sessionInsert "u" insertThis
 	return $ responseLBS ok200 [] $ maybe (fromString "Nothing") fromString u
