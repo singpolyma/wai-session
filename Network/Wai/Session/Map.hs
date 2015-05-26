@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP, FlexibleContexts #-}
 module Network.Wai.Session.Map (mapStore, mapStore_) where
 
 import Control.Monad
