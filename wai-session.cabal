@@ -37,6 +37,8 @@ library
                 base == 4.*,
                 containers,
                 bytestring,
+                bytestring-builder,
+                entropy,
                 transformers,
                 time,
                 StateVar,

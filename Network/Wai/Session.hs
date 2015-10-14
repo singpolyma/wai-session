@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 module Network.Wai.Session (Session, SessionStore, withSession, genSessionId) where
 
+import Data.Monoid (mconcat)
 import Data.Unique (newUnique, hashUnique)
 import Data.Ratio (numerator, denominator)
 import Data.Time.Clock.POSIX (getPOSIXTime)
@@ -22,8 +23,12 @@ import qualified Data.Vault.Lazy as Vault
 import Data.Vault (Key)
 import qualified Data.Vault as Vault
 #endif
-import Data.ByteString (ByteString)
+import Data.ByteString (ByteString, foldr')
+import Data.ByteString.Lazy (toStrict)
+import Data.ByteString.Builder (word8Hex, toLazyByteString)
 import qualified Blaze.ByteString.Builder as Builder
+
+import System.Entropy (getEntropy)
 
 -- | Type representing a single session (a lookup, insert pair)
 type Session m k v = ((k -> m (Maybe v)), (k -> v -> m ()))
@@ -67,14 +72,17 @@ withSession sessions cookieName cookieDefaults vkey app req = do
 	setCookie = fromString "Set-Cookie"
 	ciCookie = fromString "Cookie"
 
--- | Simple session ID generator based on time and 'Data.Unique'
+-- | Simple session ID generator using cryptographically strong random IDs
 --
 -- Useful for session stores that use session IDs.
 genSessionId :: IO ByteString
 genSessionId = do
-	u <- fmap (toInteger . hashUnique) newUnique
-	time <- fmap toRational getPOSIXTime
-	return $ fromString $ show (numerator time * denominator time * u)
+	randBytes <- getEntropy 32
+	return $ prettyPrint randBytes
+	where
+	prettyPrint :: ByteString -> ByteString
+	prettyPrint = toStrict . toLazyByteString . mconcat . Data.ByteString.foldr'
+		( \ byte acc -> word8Hex byte:acc ) []
 
 -- | Run a function over the headers in a 'Response'
 mapHeader :: (ResponseHeaders -> ResponseHeaders) -> Response -> Response
