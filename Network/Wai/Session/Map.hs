@@ -30,7 +30,7 @@ mapStore gen =
 		case Map.lookup k m of
 			Just sv -> return (sessionFromMapStateVar sv, return k)
 			-- Could not find key, so it's as if we were not sent one
-			Nothing -> mapStore' (return k) ssv Nothing
+			Nothing -> mapStore' gen ssv Nothing
 	mapStore' genNewKey ssv Nothing = do
 		newKey <- genNewKey
 		sv <- newThreadSafeStateVar Map.empty
