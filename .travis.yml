@@ -2,7 +2,7 @@ language: haskell
 sudo: false
 matrix:
   include:
-    - install: cabal install --constraint="wai < 3.0.0" --only-dependencies --enable-tests
+    - install: cabal install --constraint="wai < 3.0.0" --constraint="conduit-extra < 1.2.0" --constraint="cookie < 0.4.4" --only-dependencies --enable-tests
     - install: cabal install --constraint="StateVar < 1.1.0.0" --only-dependencies --enable-tests
     - install: cabal install --only-dependencies --enable-tests
 script: cabal configure --enable-tests && cabal build
