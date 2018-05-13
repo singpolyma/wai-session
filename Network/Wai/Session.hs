@@ -2,9 +2,6 @@
 module Network.Wai.Session (Session, SessionStore, withSession, genSessionId) where
 
 import Data.Monoid (mconcat)
-import Data.Unique (newUnique, hashUnique)
-import Data.Ratio (numerator, denominator)
-import Data.Time.Clock.POSIX (getPOSIXTime)
 import Data.String (fromString)
 import Control.Monad.IO.Class (liftIO)
 import Network.HTTP.Types (ResponseHeaders)
