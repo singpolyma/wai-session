@@ -90,7 +90,7 @@ mapHeader f (ResponseFile s h b1 b2) = ResponseFile s (f h) b1 b2
 mapHeader f (ResponseBuilder s h b) = ResponseBuilder s (f h) b
 #if MIN_VERSION_wai(3,0,0)
 mapHeader f (ResponseStream s h b) = ResponseStream s (f h) b
-mapHeader _ r@(ResponseRaw _ _) = r
+mapHeader f (ResponseRaw io resp) = ResponseRaw io (mapHeader f resp)
 #else
 mapHeader f (ResponseSource s h b) = ResponseSource s (f h) b
 #endif

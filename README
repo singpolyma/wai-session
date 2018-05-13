@@ -7,7 +7,4 @@ functions (lookup key, set key) for the current session through the
 Also provides a simple example session store based on threadsafe
 'IORef's and 'Data.Map'.
 
-NOTE: if any part of your application uses 'ResponseRaw' the session
-header will *not* be added.
-
 See example/Main.hs in git for example usage.
